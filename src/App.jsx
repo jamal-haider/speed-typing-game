@@ -1,61 +1,62 @@
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
 function App() {
-
-  const STARTING_TIME = 5
-  const [text, setText] = useState("")
-  const [timeRemaining, setTimeRemaining] = useState(STARTING_TIME)
-  const [isTimeRemaining, setIsTimeRemaining] = useState(false)
+  const TOTAL_GAME_TIME = 5
+  const [gameStarted, setGameStarted] = useState(false)
+  const [remainingTime, setRemainingTime] = useState(TOTAL_GAME_TIME)
   const [wordCount, setWordCount] = useState(0)
-  
-  function handleChange(e){
-    setText(e.target.value)
-  }
+  const [textBox, setTextBox] = useState("")
 
-  function calculateWordCount(text){
-    const wordsArr = text.trim().split(" ")
-    return wordsArr.filter(word => word !== "").length
-  }
-
-  useEffect(() => {
-    if(isTimeRemaining && timeRemaining > 0 ){
-      setTimeout(() => {
-        setTimeRemaining(prevTimeRemaining => prevTimeRemaining - 1)
-      }, 1000)
-    }else if(timeRemaining === 0){
-      endGame()
-    }
-    
-  }, [timeRemaining, isTimeRemaining])
+  const textBoxRef = useRef(null)
 
   function startGame(){
-   setIsTimeRemaining(true)
-   setText("")
-   setWordCount(0)
-   setTimeRemaining(STARTING_TIME)
+    setGameStarted(true)
+    setTextBox("")
+    setWordCount(0)
+    textBoxRef.current.disabled = false
+    textBoxRef.current.focus()
   }
 
   function endGame(){
-    setIsTimeRemaining(false)
-    setWordCount(calculateWordCount(text))
+    setGameStarted(false)
+    setWordCount(getWordCount())
+    setRemainingTime(TOTAL_GAME_TIME)
   }
+  function getWordCount(){
+    return textBox.trim().split(" ").length
+  }
+
+  useEffect(() => {
+    if(gameStarted && remainingTime > 0){
+      setTimeout(() => {
+        setRemainingTime(time => time - 1)
+      }, 1000);
+    }else if(remainingTime === 0){
+      endGame()
+    }
+  }, [gameStarted, remainingTime])
+
+
 
   return (
     <>
       <h1>How fast do you type?</h1>
-      <textarea
-        onChange={handleChange}
-        value={text}
-        disabled={!isTimeRemaining}
+      <textarea 
+        value={textBox}
+        disabled={!gameStarted}
+        onChange={(e) => setTextBox(e.target.value)}
+        ref={textBoxRef}
       />
-      <h4>Time remaining: {timeRemaining} </h4>
+      <h4>Time remaining: {remainingTime}</h4>
       <button
         onClick={startGame}
-        disabled={isTimeRemaining}
-      >START</button>
-      <h1>Word count: {wordCount ? wordCount : '???'}</h1>
+        disabled={gameStarted}
+      >
+        START
+      </button>
+      <h1>Word count: {wordCount}</h1>
     </>
   )
 }
